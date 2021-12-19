@@ -1,0 +1,256 @@
+<!doctype html>
+<!-- http://bl.ocks.org/micahstubbs/8e15870eb432a21f0bc4d3d527b2d14f-->
+<!--http://datamaps.github.io -->
+<!-- https://stackoverflow.com/questions/43120140/in-an-example-for-a-worldmap-for-d3v4-world-countries-json-cant-be-found-->
+<head>
+	<title> Pcap analyzer</title>
+	<meta charset="utf-8">
+
+	<meta name="description" content="">
+	<meta name="viewport" conten="width=device-widthh, initial-scale=1">
+	<!-- jquery -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<!-- css -->
+	<link rel="stylesheet", href="{{url_for('static',filename='rescss.css') }}">
+</head>
+
+
+
+<body>
+
+<!-- scripts -->
+
+<!-- Header Section -->
+<section>
+	<div id="header">
+		{% if casename %}
+		<h1> 
+			<a href="/result_page/{{casename}}">Pacap Analyzer - {{casename}}</a>
+		</h1>
+		{% else %}
+		<h1> <a href="/">Pacap Analyzer</a> </h1>
+		{% endif %}
+		<ul class="header-content">
+			<li>
+				<h2><a href="/">Home</a></h2>
+			</li>
+		</ul>
+	</div>
+</section>
+
+<!-- Left menu bar -->
+<section>
+	<div id="left-sidebar">
+		<h2> Menu </h2>
+		<ul class="leftbar-content">
+			<li rel="fundamental-info" class="active">General Information</li>
+			<li rel="see-all-packets">View all packets info</li>
+			<li rel="world-map">World Map</li>	
+			<li rel="suspicious-packet">Suspicious Packet</li>	
+			<li rel="timestamp">Timestamp</li>	
+			<li rel="protocol">Protocol Statistic</li>	
+		</ul>
+	</div>
+<script>
+	var locations = [];
+	var tmp = {{exported['Locations']|tojson}}
+	//console.log(tmp)
+	for (var x in tmp){
+		locations.push(
+			{"lat":parseFloat(tmp[x].split(',')[0]), "lng":parseFloat(tmp[x].split(',')[1])}
+			)
+		//locations.push({{exported['Locations']|tojson}}[x])
+	}
+	//console.log(locations)
+	//document.write(locations)
+</script>
+
+<!-- main content -->
+	<main id="main">
+		<!-- filterbar content -->
+		<filter>
+			<nav id="filter-bar">
+				<div id="close-filter" onclick="closeNav()">
+					&#9776;CLOSE					
+				</div>
+				<h1 id="filter-header"> Filter menu </h1>
+				<ul class="filter-content">
+					<form action="/get_filter_data/{{casename}}" method="post">
+					{% if filter['SIP'] %}
+					<li>Source IP:<br><input type=text name="SIP" value={{filter['SIP']}}></li>
+					{% else %}
+					<li>Source IP:<br><input type=text name="SIP"></li>
+					{% endif %}
+
+					{% if filter['DIP'] %}
+					<li>Destination IP:<br><input type=text name="DIP" value={{filter['DIP']}}></li>
+					{% else %}
+					<li>Destination IP:<br><input type=text name="DIP"></li>
+					{% endif %}
+
+					{% if filter['SPORT'] %}
+					<li>Source Port:<br><input type=text name="SPORT" value={{filter['SPORT']}} ></li>
+					{% else %}
+					<li>Source Port:<br><input type=text name="SPORT"></li>
+					{% endif %}
+
+					{% if filter['DPORT'] %}
+					<li>Destination Port:<br><input type=text name="DPORT" value={{filter['DPORT']}} ></li>
+					{% else %}
+					<li>Destination Port:<br><input type=text name="DPORT"></li>
+					{% endif %}
+
+					{% if filter['UDP'] %}
+					<li><input type=checkbox name="UDP" checked={{filter['UDP']}} > UDP protocol</li>
+
+					{% else %}
+					<li><input type=checkbox name="UDP"> UDP</li>
+					{% endif %}
+
+
+					{% if filter['TCP'] %}
+					<li><input type=checkbox name="TCP" checked={{filter['TCP']}} > TCP protocol</li>
+					{% else %}
+					<li><input type=checkbox name="TCP"> TCP</li>
+					{% endif %}
+
+					{% if filter['ICMP'] %}
+					<li><input type=checkbox name="ICMP" checked={{filter['ICMP']}} > ICMP protocol</li>
+					{% else %}
+					<li><input type=checkbox name="ICMP"> ICMP</li>
+					{% endif %}
+
+					{% if filter['others'] %}
+					<li><input type=checkbox name="others" checked={{filter['others']}}> Other protocol</li>
+					{% else %}
+					<li><input type=checkbox name="others"> Other Packets</li>
+					{% endif %}
+					<li><input type=submit value="Apply Filter"></li>
+					</form>
+				</ul>
+
+			</nav>
+		</filter>
+		<!-- filter establizer -->
+		<div id=filter-icon onclick="openNav()"> 
+			&#9776;Filter
+		</div>
+
+		<!-- main contents start -->
+
+		<div id="fundamental-info" class="tab-left">
+			<h3>
+				{{exported['numberOfPackets']}}: Total Packet	<br>
+				{{exported['numberOfProtocol']}}: Total Protocol<br>
+				{{exported['numberOfIPs']}}: Total IP		<br>
+				{{exported['numberOfPorts']}}: Total Port	<br>
+			</h3>
+			<br>
+			<h2> Suspicious Packet List </h2>
+			<h3>
+				{{exported['arp']|length}}: ARP poisoning packet detected<br>
+				<!--HTTP packet without port 80<br>-->
+			</h3>
+			<br>
+
+			{% if filter['do_isp'] %}
+			<h2> Additional information </h2>
+			<h3>
+				{{exported['numberOfCountry']}}:	Number of country detected <br>
+				{{exported['numberOfISP']}}:	Number of ISP detected <br>
+			</h3>
+			{% endif %}
+		</h3>
+
+		</div>
+		<div id="see-all-packets" class = "tab-left">
+			<table>
+				<tr>
+					<th>TIMESTAMP</th>
+					<th>PROTOCOL</th>
+					<th>SIP</th>
+					<th>DIP</th>
+					<th>SPORT</th>
+					<th>DPORT</th>
+				</tr>
+				{% for each_pkt in exported['allpackets']%}
+				<tr>
+					<td>{{each_pkt[0]}}</td>
+					<td>{{each_pkt[1]}}</td>
+					<td>{{each_pkt[2]}}</td>
+					<td>{{each_pkt[3]}}</td>
+					<td>{{each_pkt[4]}}</td>
+					<td>{{each_pkt[5]}}</td>
+				</tr>
+				{% endfor %}
+			</table>
+			
+		</div>
+
+		<div id="world-map" class="tab-left">
+			<script>
+				function initMap() {
+					var map = new google.maps.Map(document.getElementById('world-map'), {
+						zoom: 3,
+						center: {lat: 37.56, lng:126.97} /* Seoul */
+					});
+					var labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+					var markers = locations.map(function(location, i) {
+						return new google.maps.Marker({
+							position: location,
+							label: labels[i % labels.length]
+						});
+					});
+
+				// Add a marker clusterer to manage the markers.
+
+				var markerCluster = new MarkerClusterer(map, markers,
+					{imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'});
+				} /* 위도 경도 추가 */
+
+				
+   			</script>
+		</div>
+		<div id="suspicious-packet" class="tab-left">
+			
+			<h2>Suspicious arp </h2>
+			<table>
+				<tr>
+					<th>IP of the packet</th>
+					<th>Mac of the IP</th>
+				</tr>
+				{% for each_pkt in exported['arp']%}
+				<tr>
+					<td>{{each_pkt}}</td>
+					{% for each_mac in exported['arp'][each_pkt] %}
+					<td>{{each_mac}}</td>
+					{% endfor %}
+				</tr>
+				{% endfor %}
+			</table>
+
+			<h2>Suspicious http </h2>
+			
+		</div>
+		<div id="timestamp" class="tab-left">
+			<img src="{{url_for('get_img', casename=casename, image='timestamp.png') }}" height="600">
+		</div>
+		<div id="protocol" class="tab-left">
+			<img src="{{url_for('get_img', casename=casename, image='protocolmap.png') }}" height="600">
+		</div>
+	</main>>
+</section>
+
+
+
+
+<!-- script content -->
+<script type="text/javascript" src="{{url_for('static',filename='filter-bar.js') }}" ></script>
+<script type="text/javascript" src="{{url_for('static',filename='left-main.js') }}"></script>
+<script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js">
+</script>
+<script async defer
+src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCyySBRUVCK9XhrcK47umyw37t3_U8L95U&callback=initMap">
+</script>
+
+</html>

@@ -1,0 +1,74 @@
+<!doctype html>
+
+<head>
+	<title> PCAP file analyzer </title>
+	<meta charset="utf-8">
+	<meta name="description" content="">
+	<meta name="viewport" conten="width=device-widthh, initial-scale=1">
+	<!-- jquery -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<!-- css -->
+	<link rel="stylesheet", href="{{ url_for('static',filename='main.css') }}">
+</head>
+
+
+
+<body>
+
+<!-- Header Section -->
+<section>
+	<div id="header">
+		<h1> <a href="{{url_for('index')}}">Pacap Analyzer</a> </h1>
+		<ul class="header-content">
+			<li>
+				<h2><a href="/">Home</a></h2>
+			</li>
+		</ul>
+	</div>
+</section>
+
+
+<!-- Left menu bar -->
+<section>
+	<div id="left-sidebar">
+		<h2> Menu </h2>
+		<ul class="leftbar-content">
+			<li rel="main-menu" class="active"> Main </li>
+			<li rel="file-submit">Submit file</li>	
+			<li rel="search-db">Browse previous</li>	
+		</ul>
+	</div>
+
+
+<!-- Default main menu -->
+	<main id="main">
+		<div id="main-menu" class="tab-left">
+			<script>
+				
+			</script>
+		</div>
+		<div id="file-submit" class="tab-left">
+			<form action="/uploader" method=post enctype="multipart/form-data">
+				<p>
+					CaseName: <input type=text name="casename"><br><br>
+					File: <input type=file name="file"><br><br>
+					Do ISP?: <input type=checkbox name=do-isp><br>
+					<input type="submit" value="upload">
+				</p>
+			</form>
+		</div>
+
+
+		<div id="search-db" class="tab-left">
+			{% for each_case in caseList %}
+			<strong>Casename :<a href="{{url_for('show_result_page', casename=each_case) }}"> {{ each_case }} </a></strong>  <br>
+			{% endfor %}
+		</div>
+	</main>
+</section>
+<!-- script content -->
+<script type="text/javascript" src="{{ url_for('static',filename='left-main.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static',filename='main.js') }}"></script>
+</body>
+
+</html>
